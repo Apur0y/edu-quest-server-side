@@ -26,6 +26,7 @@ async function run() {
     await client.connect();
 
     const userCollection = client.db("Eduquest").collection("users");
+    const sessionCollection = client.db("Eduquest").collection("sessions");
 
     app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -37,6 +38,18 @@ async function run() {
       const result = await userCollection.insertOne(user)
       res.send(result)
     })
+
+    app.get("/sessions", async (req, res) => {
+      const result = await sessionCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post('/sessions',async(req,res)=>{
+      const user = req.body
+      const result = await sessionCollection.insertOne(user)
+      res.send(result)
+    })
+
 
 
     // Send a ping to confirm a successful connection

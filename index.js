@@ -1,16 +1,14 @@
-const express = require('express');
+const express = require("express");
 const app = express();
 const cors = require("cors");
-require('dotenv').config() 
+require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 //middleware
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
 
-
-
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@thelaststand.sh6jy.mongodb.net/?retryWrites=true&w=majority&appName=thelaststand`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -19,7 +17,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -27,16 +25,25 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const userCollection = client.db("Eduquest").collection("users");
 
-    const userCollection = client.db("Eduquest").collection("users")
+    app.get("/users", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
 
-app.get('/users',async(req,res)=>{
-    const result = await userCollection.find().toArray();
-    res.send(result)
-})
+    app.post('/users',async(req,res)=>{
+      const user = req.body
+      const result = await userCollection.insertOne(user)
+      res.send(result)
+    })
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -44,13 +51,10 @@ app.get('/users',async(req,res)=>{
 }
 run().catch(console.dir);
 
+app.get("/", (req, res) => {
+  res.send("Class is online");
+});
 
-
-
-app.get('/',(req,res)=>{
-    res.send('Class is online')
-})
-
-app.listen(port,()=>{
-    console.log(`Education is Running ${port}`);
-} )
+app.listen(port, () => {
+  console.log(`Education is Running ${port}`);
+});

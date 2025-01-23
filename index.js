@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@thelaststand.sh6jy.mongodb.net/?retryWrites=true&w=majority&appName=thelaststand`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -39,6 +39,32 @@ async function run() {
       res.send(result)
     })
 
+
+    app.put('/users/:id', async (req, res) => {
+      const { id } = req.params;
+      const { role } = req.body;
+    
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+    
+      try {
+        const result = await userCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { role } }
+        );
+    
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+    
+        res.status(200).json({ message: 'User role updated successfully' });
+      } catch (error) {
+        res.status(500).json({ message: 'Failed to update user role', error });
+      }
+    });
+    
+
     app.get("/sessions", async (req, res) => {
       const result = await sessionCollection.find().toArray();
       res.send(result);
@@ -52,7 +78,7 @@ async function run() {
 
 
 
-    // Send a ping to confirm a successful connection
+    // Send a ping to confirm a successful connections
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"

@@ -66,9 +66,19 @@ async function run() {
     
 
     app.get("/sessions", async (req, res) => {
-      const result = await sessionCollection.find().toArray();
+      const { filter } = req.query; // Get the status from query parameters
+      let query = {};
+    
+      // If a specific status is provided, filter by it
+      if (filter) {
+        const filterArray = filter.split(","); 
+        query = { status: { $nin: filterArray } }; // Support multiple statuses
+      }
+    
+      const result = await sessionCollection.find(query).toArray();
       res.send(result);
     });
+    
 
     app.post('/sessions',async(req,res)=>{
       const user = req.body
@@ -76,6 +86,27 @@ async function run() {
       res.send(result)
     })
 
+    app.put('/sessions/:id', async (req, res) => {
+      const { id } = req.params; // Extract session ID from URL parameters
+      const { status } = req.body; // Extract new status from request body
+    
+      try {
+        const result = await sessionCollection.updateOne(
+          { _id: new ObjectId(id) }, // Find the session by its ID
+          { $set: { status } } // Update the "status" field
+        );
+    
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: 'Session not found' });
+        }
+    
+        res.send({ message: 'Session status updated successfully', status });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: 'An error occurred', error });
+      }
+    });
+    
 
 
     // Send a ping to confirm a successful connections

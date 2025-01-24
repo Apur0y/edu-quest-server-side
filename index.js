@@ -106,6 +106,12 @@ async function run() {
         res.status(500).send({ message: 'An error occurred', error });
       }
     });
+
+    app.get('/sessions/:id', async (req,res)=>{
+      const id = req.params.id
+      const result= await sessionCollection.findOne({_id:new ObjectId(id)})
+      res.send(result)
+    })
     
 
 

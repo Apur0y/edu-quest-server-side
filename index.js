@@ -27,8 +27,21 @@ async function run() {
 
     const userCollection = client.db("Eduquest").collection("users");
     const sessionCollection = client.db("Eduquest").collection("sessions");
+    const bookedCollection = client.db("Eduquest").collection("booked");
+    const noteCollection = client.db("Eduquest").collection("notes");
 
     app.get("/users", async (req, res) => {
+
+      // const search = req.body
+     
+      // if(search){
+      //   const filteredUsers = users.filter((user) =>
+      //     user.name.toLowerCase().includes(search.toLowerCase())
+      //   );
+      
+      //   res.json(filteredUsers);
+      // }
+
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -86,33 +99,110 @@ async function run() {
       res.send(result)
     })
 
+
+
     app.put('/sessions/:id', async (req, res) => {
       const { id } = req.params; // Extract session ID from URL parameters
-      const { status } = req.body; // Extract new status from request body
+      const { status, isFree, amount } = req.body; // Extract new status, isFree, and amount from request body
     
       try {
+        // Prepare the fields to be updated
+        const updateFields = { status };
+    
+        // If the session is free, set the fee to 0; otherwise, set it to the provided amount
+        updateFields.registrationFee = isFree ? 0 : amount;
+    
+        // Update the session in the database
         const result = await sessionCollection.updateOne(
           { _id: new ObjectId(id) }, // Find the session by its ID
-          { $set: { status } } // Update the "status" field
+          { $set: updateFields } // Update the specified fields
         );
     
         if (result.matchedCount === 0) {
           return res.status(404).send({ message: 'Session not found' });
         }
     
-        res.send({ message: 'Session status updated successfully', status });
+        res.send({
+          message: 'Session updated successfully',
+          updatedFields: updateFields, // Send back the updated fields for confirmation
+        });
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: 'An error occurred', error });
       }
     });
-
+    
     app.get('/sessions/:id', async (req,res)=>{
       const id = req.params.id
       const result= await sessionCollection.findOne({_id:new ObjectId(id)})
       res.send(result)
     })
+
+    app.get('/booked', async(req,res)=>{
+      const result = await bookedCollection.find().toArray()
+      res.send(result)
+    } )
+
+    app.post('/booked', async (req,res)=>{
+      const booked = req.body
+      console.log(booked);
+      const result = await bookedCollection.insertOne(booked)
+      res.send(result)
+    })
+
+
+    app.get("/notes", async(req,res)=>{
+      const result = await noteCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.post('/notes', async(req,res)=>{
+      const note = req.body;
+      const result = await noteCollection.insertOne(note)
+      res.send(result)
+    })
     
+    app.put("/notes/:id", async (req, res) => {
+      const { id } = req.params;
+      const { title, description } = req.body;
+    
+      if (!title || !description) {
+        return res.status(400).json({ message: "Title and description are required" });
+      }
+    
+      try {
+        const updatedNote = await Note.findByIdAndUpdate(
+          id,
+          { title, description },
+          { new: true }
+        );
+    
+        if (!updatedNote) {
+          return res.status(404).json({ message: "Note not found" });
+        }
+    
+        res.status(200).json({ message: "Note updated successfully", note: updatedNote });
+      } catch (error) {
+        res.status(500).json({ message: "Error updating note", error });
+      }
+    });
+    
+    // Delete a note
+    app.delete("/notes/:id", async (req, res) => {
+      const { id } = req.params;
+    
+      try {
+        const deletedNote = await Note.findByIdAndDelete({_id : new ObjectId(id)});
+    
+        if (!deletedNote) {
+          return res.status(404).json({ message: "Note not found" });
+        }
+    
+        res.status(200).json({ message: "Note deleted successfully", note: deletedNote });
+      } catch (error) {
+        res.status(500).json({ message: "Error deleting note", error });
+      }
+    });
 
 
     // Send a ping to confirm a successful connections

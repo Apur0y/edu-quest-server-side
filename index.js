@@ -143,9 +143,21 @@ async function run() {
       res.send(result)
     } )
 
+    app.get("/booked/:id",async (req, res) => {
+      const { id } = req.params;
+      console.log("This the id",id);
+      const data =await bookedCollection.findOne({_id:new ObjectId(id)}) 
+      if (data) {
+        res.json(data);
+      } else {
+        res.status(404).json({ message: "Data not found" });
+      }
+    });
+    
+
     app.post('/booked', async (req,res)=>{
       const booked = req.body
-      console.log(booked);
+   
       const result = await bookedCollection.insertOne(booked)
       res.send(result)
     })

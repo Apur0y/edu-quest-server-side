@@ -7,11 +7,7 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 //middleware
-app.use(cors({
-  origin:  ["http://localhost:5173", "https://edu-quest-aa2b3.web.app"],
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+app.use(cors());
 
 app.use(express.json());
 
@@ -86,7 +82,7 @@ async function run() {
       res.send({ token });
     });
 
-    app.get("/users",verifyToken,verifyRole("admin"), async (req, res) => {
+    app.get("/users", async (req, res) => {
    
 
       const result = await userCollection.find().toArray();
@@ -203,25 +199,25 @@ async function run() {
       }
     });
 
-    app.post("/booked",verifyToken,verifyRole("student"), async (req, res) => {
+    app.post("/booked", async (req, res) => {
       const booked = req.body;
 
       const result = await bookedCollection.insertOne(booked);
       res.send(result);
     });
 
-    app.get("/notes",verifyToken,verifyRole("student"), async (req, res) => {
+    app.get("/notes",async (req, res) => {
       const result = await noteCollection.find().toArray();
       res.send(result);
     });
 
-    app.post("/notes",verifyToken,verifyRole("student"), async (req, res) => {
+    app.post("/notes", async (req, res) => {
       const note = req.body;
       const result = await noteCollection.insertOne(note);
       res.send(result);
     });
 
-    app.put("/notes/:id",verifyToken,verifyRole("student"), async (req, res) => {
+    app.put("/notes/:id", async (req, res) => {
       const { id } = req.params;
       const filter = { _id: new ObjectId(id) };
       const updatedNote = req.body;
@@ -237,7 +233,7 @@ async function run() {
     });
 
     // Delete a note
-    app.delete("/notes/:id",verifyToken,verifyRole("student"), async (req, res) => {
+    app.delete("/notes/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await noteCollection.deleteOne(query);
@@ -279,12 +275,12 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/reviews",verifyToken, async (req, res) => {
+    app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result);
     });
 
-    app.post("/reviews",verifyToken, async (req, res) => {
+    app.post("/reviews", async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
       res.send(result);
